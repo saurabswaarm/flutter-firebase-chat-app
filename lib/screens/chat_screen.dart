@@ -13,9 +13,6 @@ class _ChatScreenState extends State<ChatScreen> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   FirebaseUser currentUser;
 
- 
-  
-
   void getCurrentUser() async {
     try {
       final user = await _auth.currentUser();
@@ -47,9 +44,9 @@ class _ChatScreenState extends State<ChatScreen> {
                 Navigator.popUntil(
                     context,
                     (Route route) =>
-                        route.settings.name == WelcomeScreen.route);
+                        route.settings.name == WelcomeScreen.route); //keep popping till you clean the stack
 
-                //Implement logout functionality
+                
               }),
         ],
         title: Text('⚡️Chat'),
