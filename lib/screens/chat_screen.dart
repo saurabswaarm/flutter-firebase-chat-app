@@ -13,7 +13,14 @@ class _ChatScreenState extends State<ChatScreen> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   FirebaseUser currentUser;
 
- 
+  String getTimeNow() {
+    DateTime timeNow = DateTime.now();
+    int hour = timeNow.hour;
+    int minute = timeNow.minute;
+    int second = timeNow.second;
+
+    return '$hour:$minute:$second';
+  }
   
 
   void getCurrentUser() async {
@@ -58,7 +65,7 @@ class _ChatScreenState extends State<ChatScreen> {
       body: SafeArea(
         //
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          // mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
             // id card
@@ -77,7 +84,33 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
             ),
             //
-            
+            Expanded(
+                          child: Column(
+                mainAxisAlignment: MainAxisAlignment.end,
+                mainAxisSize: MainAxisSize.max,
+                children: <Widget>[
+                  //chat bubble
+                  Container(
+                    padding: EdgeInsets.all(10),
+                    child: Row(
+                      textDirection: TextDirection.ltr,
+                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                      textBaseline: TextBaseline.alphabetic,
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: <Widget>[
+                        Card(
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Text('one message' ,style: kChatbubbleStyle),
+                          ),
+                        ),
+                        Text(getTimeNow(),style: TextStyle(fontSize:10))
+                      ],
+                    ),
+                  )
+                ],
+              ),
+            ),
 
             // input area
             Container(
