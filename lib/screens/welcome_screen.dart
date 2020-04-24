@@ -1,13 +1,90 @@
+import 'package:flash_chat/buttonsauth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart' show timeDilation;
+import 'login_screen.dart';
 
 class WelcomeScreen extends StatefulWidget {
+  static String route = 'welcome_screen';
   @override
   _WelcomeScreenState createState() => _WelcomeScreenState();
 }
 
-class _WelcomeScreenState extends State<WelcomeScreen> {
+class _WelcomeScreenState extends State<WelcomeScreen>
+    with TickerProviderStateMixin {
+  AnimationController animationController1;
+  AnimationController animationController2;
+  AnimationController animationController3;
+  Animation animation2;
+  Animation animation3;
+  Animation animation4;
+
+  @override
+  void initState() {
+    //--1st Animation
+    animationController1 = AnimationController(
+      duration: Duration(milliseconds: 3000),
+      vsync: this,
+    );
+    animationController1.forward(from: 0.0);
+
+    animationController1.addListener(() {
+      // animationController1.isCompleted ? animationController1.reverse(from: 1.0) : print('poo');
+      setState(() {});
+    });
+    //
+
+    //
+    animationController2 = AnimationController(
+      duration: Duration(seconds: 2),
+      vsync: this,
+    );
+    animationController2.forward();
+    animation2 = CurvedAnimation(
+      parent: animationController2,
+      curve: Curves.bounceOut,
+    );
+
+    animation2.addListener(() {
+      setState(() {});
+    });
+    //
+
+    //
+    animationController3 = AnimationController(
+      duration: Duration(seconds: 1),
+      vsync: this,
+    );
+    animationController3.forward();
+    animation3 = ColorTween(
+      begin: Colors.white,
+      end: Colors.lightBlueAccent,
+    ).animate(animationController3);
+    animation4 = ColorTween(
+      begin: Colors.white,
+      end: Colors.blueAccent,
+    ).animate(animationController3);
+
+    animation3.addListener(() {
+      setState(() {});
+    });
+    animation4.addListener(() {
+      setState(() {});
+    });
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    animationController1.dispose();
+    animationController2.dispose();
+    animationController3.dispose();
+
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
+    timeDilation = 1;
     return Scaffold(
       backgroundColor: Colors.white,
       body: Padding(
@@ -18,57 +95,28 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
           children: <Widget>[
             Row(
               children: <Widget>[
-                Container(
-                  child: Image.asset('images/logo.png'),
-                  height: 60.0,
-                ),
-                Text(
-                  'Flash Chat',
-                  style: TextStyle(
-                    fontSize: 45.0,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
+                AnimLogo(height:animationController1.value * 95.0),
+                Typewriter(),
               ],
             ),
             SizedBox(
               height: 48.0,
             ),
-            Padding(
-              padding: EdgeInsets.symmetric(vertical: 16.0),
-              child: Material(
-                elevation: 5.0,
-                color: Colors.lightBlueAccent,
-                borderRadius: BorderRadius.circular(30.0),
-                child: MaterialButton(
-                  onPressed: () {
-                    //Go to login screen.
-                  },
-                  minWidth: 200.0,
-                  height: 42.0,
-                  child: Text(
-                    'Log In',
-                  ),
-                ),
-              ),
+            AuthButton(
+              onPressed: () {
+                Navigator.pushNamed(context, LoginScreen.route);
+              },
+              textSize: animation2.value * 16,
+              color: animation3.value,
+              text: 'Login',
             ),
-            Padding(
-              padding: EdgeInsets.symmetric(vertical: 16.0),
-              child: Material(
-                color: Colors.blueAccent,
-                borderRadius: BorderRadius.circular(30.0),
-                elevation: 5.0,
-                child: MaterialButton(
-                  onPressed: () {
-                    //Go to registration screen.
-                  },
-                  minWidth: 200.0,
-                  height: 42.0,
-                  child: Text(
-                    'Register',
-                  ),
-                ),
-              ),
+            AuthButton(
+              onPressed: () {
+                Navigator.pushNamed(context, LoginScreen.route);
+              },
+              textSize: animation2.value * 16,
+              color: animation4.value,
+              text:'register',
             ),
           ],
         ),
