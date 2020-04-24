@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flash_chat/screens/welcome_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flash_chat/constants.dart';
@@ -12,6 +13,7 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   FirebaseUser currentUser;
+  String message;
 
   String getTimeNow() {
     DateTime timeNow = DateTime.now();
@@ -21,7 +23,6 @@ class _ChatScreenState extends State<ChatScreen> {
 
     return '$hour:$minute:$second';
   }
-  
 
   void getCurrentUser() async {
     try {
@@ -84,33 +85,7 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
             ),
             //
-            Expanded(
-                          child: Column(
-                mainAxisAlignment: MainAxisAlignment.end,
-                mainAxisSize: MainAxisSize.max,
-                children: <Widget>[
-                  //chat bubble
-                  Container(
-                    padding: EdgeInsets.all(10),
-                    child: Row(
-                      textDirection: TextDirection.ltr,
-                      crossAxisAlignment: CrossAxisAlignment.baseline,
-                      textBaseline: TextBaseline.alphabetic,
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: <Widget>[
-                        Card(
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Text('one message' ,style: kChatbubbleStyle),
-                          ),
-                        ),
-                        Text(getTimeNow(),style: TextStyle(fontSize:10))
-                      ],
-                    ),
-                  )
-                ],
-              ),
-            ),
+            MessageList(),
 
             // input area
             Container(
@@ -123,7 +98,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   Expanded(
                     child: TextField(
                       onChanged: (value) {
-                        //Do something with the user input.
+                        message = value;
                       },
                       decoration: kMessageTextFieldDecoration,
                     ),
@@ -131,7 +106,14 @@ class _ChatScreenState extends State<ChatScreen> {
                   //
                   FlatButton(
                     onPressed: () {
-                      //Implement send functionality.
+                      Firestore.instance
+                          .collection('messages')
+                          .document()
+                          .setData({
+                        'message': message,
+                        'user': currentUser.email,
+                        'time': getTimeNow()
+                      });
                     },
                     child: Text(
                       'Send',
@@ -147,3 +129,76 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 }
+
+class MessageList extends StatelessWidget {
+  
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder(
+      stream: Firestore.instance.collection('messages').snapshots(),
+      //
+      builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
+        if (snapshot.hasError) {
+          return Text('error');
+        }
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Text('Waiting');
+        } else {
+          //
+          return Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.end,
+              mainAxisSize: MainAxisSize.max,
+              //
+              children: snapshot.data.documents.map<Widget>(
+                 (DocumentSnapshot document) {
+                  return Container(
+                    padding: EdgeInsets.all(10),
+                    child: Row(
+                      textDirection: TextDirection.ltr,
+                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                      textBaseline: TextBaseline.alphabetic,
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: <Widget>[
+                        Card(
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Text(document['message'], style: kChatbubbleStyle),
+                          ),
+                        ),
+                        Text(document['time'], style: TextStyle(fontSize: 10))
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+          );
+        }
+      },
+    );
+  }
+}
+
+//  <Widget>[
+//                   //chat bubble
+//                   Container(
+//                     padding: EdgeInsets.all(10),
+//                     child: Row(
+//                       textDirection: TextDirection.ltr,
+//                       crossAxisAlignment: CrossAxisAlignment.baseline,
+//                       textBaseline: TextBaseline.alphabetic,
+//                       mainAxisAlignment: MainAxisAlignment.end,
+//                       children: <Widget>[
+//                         Card(
+//                           child: Padding(
+//                             padding: const EdgeInsets.all(8.0),
+//                             child: Text('one message' ,style: kChatbubbleStyle),
+//                           ),
+//                         ),
+//                         Text(getTimeNow(),style: TextStyle(fontSize:10))
+//                       ],
+//                     ),
+//                   )
+//                 ]
