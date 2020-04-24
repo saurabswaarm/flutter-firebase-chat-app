@@ -6,6 +6,12 @@ const kSendButtonTextStyle = TextStyle(
   fontSize: 18.0,
 );
 
+const kChatbubbleStyle = TextStyle(
+  color: Colors.blue,
+  fontWeight: FontWeight.w400,
+  fontSize: 16.0,
+);
+
 const kMessageTextFieldDecoration = InputDecoration(
   contentPadding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
   hintText: 'Type your message here...',

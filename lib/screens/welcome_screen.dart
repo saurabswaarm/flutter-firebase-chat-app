@@ -1,4 +1,5 @@
 import 'package:flash_chat/buttonsauth.dart';
+import 'package:flash_chat/screens/registration_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart' show timeDilation;
 import 'login_screen.dart';
@@ -112,11 +113,11 @@ class _WelcomeScreenState extends State<WelcomeScreen>
             ),
             AuthButton(
               onPressed: () {
-                Navigator.pushNamed(context, LoginScreen.route);
+                Navigator.pushNamed(context, RegistrationScreen.route);
               },
               textSize: animation2.value * 16,
               color: animation4.value,
-              text:'register',
+              text:'Register',
             ),
           ],
         ),
