@@ -1,3 +1,13 @@
+
+# Created this app while learning from Angel Yu's course.
+
+Besides flutter this was also a great introduction to firebase and message streams.
+
+
+
+
+## Original Readme
+
 ![App Brewery Banner](https://github.com/londonappbrewery/Images/blob/master/AppBreweryBanner.png)
 
 
