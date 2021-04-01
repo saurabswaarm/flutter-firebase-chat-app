@@ -23,14 +23,14 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: ModalProgressHUD(
-              inAsyncCall: spinner,
-              child: Padding(
+        inAsyncCall: spinner,
+        child: Padding(
           padding: EdgeInsets.symmetric(horizontal: 24.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
-              AnimLogo(height: 200),
+              Flexible(child: AnimLogo(height: 200)),
               SizedBox(
                 height: 48.0,
               ),
@@ -59,19 +59,24 @@ class _LoginScreenState extends State<LoginScreen> {
                 color: Colors.lightBlueAccent,
                 text: 'Log In',
                 onPressed: () async {
-                  setState((){
+                  setState(() {
                     spinner = true;
                   });
-                  try{
-                    AuthResult userToLogin = await _auth.signInWithEmailAndPassword(email:email, password:password);
-                    if(userToLogin.user != null){
+                  try {
+                    AuthResult userToLogin =
+                        await _auth.signInWithEmailAndPassword(
+                            email: email, password: password);
+                    if (userToLogin.user != null) {
                       print(userToLogin);
                       Navigator.pushNamed(context, ChatScreen.route);
-                      setState((){
+                      setState(() {
                         spinner = false;
                       });
                     }
-                  } catch (e){
+                  } catch (e) {
+                    setState(() {
+                      spinner = false;
+                    });
                     print(e);
                   }
                 },

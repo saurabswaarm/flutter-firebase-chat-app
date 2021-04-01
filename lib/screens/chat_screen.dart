@@ -4,6 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flash_chat/constants.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+FirebaseAuth _auth = FirebaseAuth.instance;
+Firestore _store = Firestore.instance;
+FirebaseUser currentUser;
+
+final ScrollController _scrollController = ScrollController(initialScrollOffset: 00.0);
+
 class ChatScreen extends StatefulWidget {
   static String route = 'chat_screen';
   @override
@@ -11,18 +17,10 @@ class ChatScreen extends StatefulWidget {
 }
 
 class _ChatScreenState extends State<ChatScreen> {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  FirebaseUser currentUser;
   String message;
 
-  String getTimeNow() {
-    DateTime timeNow = DateTime.now();
-    int hour = timeNow.hour;
-    int minute = timeNow.minute;
-    int second = timeNow.second;
-
-    return '$hour:$minute:$second';
-  }
+  //textcontroller
+  final TextEditingController _textController = TextEditingController();
 
   void getCurrentUser() async {
     try {
@@ -84,9 +82,12 @@ class _ChatScreenState extends State<ChatScreen> {
                 ),
               ),
             ),
-            //
-            MessageList(),
 
+            Expanded(
+              child: MessageStreamBuilder(),
+            ),
+
+            //\\//\\//\\
             // input area
             Container(
               decoration: kMessageContainerDecoration,
@@ -97,6 +98,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   //
                   Expanded(
                     child: TextField(
+                      controller: _textController,
                       onChanged: (value) {
                         message = value;
                       },
@@ -105,15 +107,12 @@ class _ChatScreenState extends State<ChatScreen> {
                   ),
                   //
                   FlatButton(
-                    onPressed: () {
-                      Firestore.instance
-                          .collection('messages')
-                          .document()
-                          .setData({
-                        'message': message,
-                        'user': currentUser.email,
-                        'time': getTimeNow()
-                      });
+                    onPressed: ()  {
+                       _store.collection('messages').add(
+                          {'message': message, 'sender': currentUser.email, 'date': DateTime.now().toString()});
+
+                      _textController.clear();
+                      _scrollController.animateTo(0.0, duration: Duration(milliseconds: 200), curve: Curves.bounceIn);
                     },
                     child: Text(
                       'Send',
@@ -130,75 +129,104 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 }
 
-class MessageList extends StatelessWidget {
-  
+// String getTimeNow() {
+
+//   DateTime timeNow = DateTime.now();
+//   int hour = timeNow.hour;
+//   int minute = timeNow.minute;
+//   int second = timeNow.second;
+
+//   return '$hour:$minute:$second';
+// }
+
+class MessageBubble extends StatelessWidget {
+  final String senderName;
+  final String messageText;
+  final bool isMe;
+
+  MessageBubble({this.senderName, this.messageText, this.isMe});
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder(
-      stream: Firestore.instance.collection('messages').snapshots(),
-      //
-      builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
-        if (snapshot.hasError) {
-          return Text('error');
-        }
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return Text('Waiting');
-        } else {
-          //
-          return Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.end,
-              mainAxisSize: MainAxisSize.max,
-              //
-              children: snapshot.data.documents.map<Widget>(
-                 (DocumentSnapshot document) {
-                  return Container(
-                    padding: EdgeInsets.all(10),
-                    child: Row(
-                      textDirection: TextDirection.ltr,
-                      crossAxisAlignment: CrossAxisAlignment.baseline,
-                      textBaseline: TextBaseline.alphabetic,
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: <Widget>[
-                        Card(
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Text(document['message'], style: kChatbubbleStyle),
-                          ),
-                        ),
-                        Text(document['time'], style: TextStyle(fontSize: 10))
-                      ],
-                    ),
-                  );
-                },
+    return Container(
+      margin: isMe ? EdgeInsets.only(left: 30) : EdgeInsets.only(right: 30),
+      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+      alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+      child: Column(
+        crossAxisAlignment:
+            isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+        children: <Widget>[
+          Material(
+            child: Text(senderName),
+          ),
+          Material(
+            elevation: 3,
+            borderRadius: BorderRadius.only(
+              bottomLeft: Radius.circular(8),
+              bottomRight: isMe? Radius.circular(0): Radius.circular(8),
+              topLeft: isMe? Radius.circular(8) : Radius.circular(0),
+              topRight: Radius.circular(8),
+            ),
+            color: isMe ? Colors.blue : Colors.green.shade100,
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                messageText,
+                style: TextStyle(
+                  color: isMe ? Colors.white : Colors.blue,
+                ),
               ),
             ),
-          );
-        }
-      },
+          ),
+        ],
+      ),
     );
   }
 }
 
-//  <Widget>[
-//                   //chat bubble
-//                   Container(
-//                     padding: EdgeInsets.all(10),
-//                     child: Row(
-//                       textDirection: TextDirection.ltr,
-//                       crossAxisAlignment: CrossAxisAlignment.baseline,
-//                       textBaseline: TextBaseline.alphabetic,
-//                       mainAxisAlignment: MainAxisAlignment.end,
-//                       children: <Widget>[
-//                         Card(
-//                           child: Padding(
-//                             padding: const EdgeInsets.all(8.0),
-//                             child: Text('one message' ,style: kChatbubbleStyle),
-//                           ),
-//                         ),
-//                         Text(getTimeNow(),style: TextStyle(fontSize:10))
-//                       ],
-//                     ),
-//                   )
-//                 ]
+class MessageStreamBuilder extends StatelessWidget {
+  
+  
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<QuerySnapshot>(
+      stream: _store.collection('messages').snapshots(),
+      builder: (BuildContext context, AsyncSnapshot snapshot) {
+        if (!snapshot.hasData ||
+            snapshot.connectionState == ConnectionState.waiting) {
+          return CircularProgressIndicator();
+        }
+
+        List forCompare = [];
+        for (DocumentSnapshot document in snapshot.data.documents) {
+          String message = document.data['message'];
+          String sender = document.data['sender'];
+          String dateString = document.data['date'];
+          DateTime date = DateTime.parse(dateString);
+
+          List<dynamic> objects = [message,sender,date];
+          forCompare.add(objects);
+        }
+
+        forCompare.sort((a,b)=>b[2].compareTo(a[2]));
+
+        List<Widget> chatItems = [];
+
+        for(List item in forCompare){
+          chatItems.add(MessageBubble(
+            senderName: item[1],
+            messageText: item[0],
+            isMe: item[1] == currentUser.email, //checking to see who the sender is
+          ));
+        }
+        return ListView(
+          addAutomaticKeepAlives: true,
+          controller: _scrollController,
+          reverse:true,
+          children: chatItems,
+        );
+      },
+    );
+  }
+}
